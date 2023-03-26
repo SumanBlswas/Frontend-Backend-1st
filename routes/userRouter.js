@@ -29,30 +29,59 @@ userRouter.post("/register", async (req, res) => {
   }
 });
 
+// userRouter.post("/login", async (req, res) => {
+//   const { email, password } = req.body;
+//   try {
+//     let user = await userModel.find({ email });
+//     user.length > 0
+//       ? bcrypt.compare(password, user[0].password, (err, result) => {
+//           if (result) {
+//             res.status(200).send({
+//               msg: "Login successfull",
+//               token: jwt.sign(
+//                 {
+//                   userID: user[0]._id,
+//                   exp: Math.floor(Date.now() / 1000) + 60 * 60,
+//                 },
+//                 "bruce"
+//               ),
+//             });
+//           } else {
+//             res.status(404).send({ msg: "Wrong Credential" });
+//           }
+//         })
+//       : res.status(404).send({ msg: "Login failed" });
+//   } catch (error) {
+//     res.status(404).send({ msg: error.message });
+//   }
+// });
+
 userRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     let user = await userModel.find({ email });
-    user.length > 0
-      ? bcrypt.compare(password, user[0].password, (err, result) => {
-          if (result) {
-            res.status(200).send({
-              msg: "Login successfull",
-              token: jwt.sign(
-                {
-                  userID: user[0]._id,
-                  exp: Math.floor(Date.now() / 1000) + 60 * 60,
-                },
-                "bruce"
-              ),
-            });
-          } else {
-            res.status(404).send({ msg: "Wrong Credential" });
-          }
-        })
-      : res.status(404).send({ msg: "Login failed" });
+    if (user.length > 0) {
+      const passwordMatch = await bcrypt.compare(password, user[0].password);
+      if (passwordMatch) {
+        const token = jwt.sign(
+          {
+            userID: user[0]._id,
+            exp: Math.floor(Date.now() / 1000) + 60 * 60,
+          },
+          "bruce"
+        );
+        res.status(200).send({
+          msg: "Login successful",
+          token: token,
+        });
+      } else {
+        res.status(401).send({ msg: "Wrong credentials" });
+      }
+    } else {
+      res.status(401).send({ msg: "Wrong credentials" });
+    }
   } catch (error) {
-    res.status(404).send({ msg: error.message });
+    res.status(500).send({ msg: error.message });
   }
 });
 

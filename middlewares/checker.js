@@ -2,17 +2,18 @@ const jwt = require("jsonwebtoken");
 
 const checker = (req, res, next) => {
   const token = req.headers.authorization;
+  console.log(token);
   if (token) {
-    const splitToken = token.split(" ")[1];
-    const decoded = jwt.verify(splitToken, "bruce");
-    if (decoded) {
+    try {
+      const decoded = jwt.verify(token, "bruce");
       req.body.userID = decoded.userID;
+      console.log(decoded);
       next();
-    } else {
-      res.status(404).send({ msg: "pls login first" });
+    } catch (error) {
+      res.status(401).send({ msg: "Unauthorized" });
     }
   } else {
-    res.status(404).send({ msg: "pls login first" });
+    res.status(401).send({ msg: "Unauthorized" });
   }
 };
 
